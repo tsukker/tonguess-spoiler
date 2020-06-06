@@ -42,7 +42,7 @@ def turn(mode, candidates, word=None):
     if len(candidates) < 10:
         print('candidates: ', end='')
         print(candidates)
-    if len(candidates) == 1:
+    if len(candidates) in [1, 2]:
         best_word = candidates[0]
         best_score = calc_score(mode, candidates, best_word)
     elif word is not None:
