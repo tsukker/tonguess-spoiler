@@ -7,8 +7,10 @@ import time
 
 def call(s):
     print(s, flush=True)
-    ans = tuple(map(int, input().split(' ')))
-    return ans
+    ans = input()
+    ans_tup = tuple(map(int, [c for c in ans if c in string.digits]))
+    print(f'answer: {ans_tup}')
+    return ans_tup
 
 
 def groups(mode, candidates, word):
@@ -39,6 +41,7 @@ def calc_score(mode, candidates, word):
 def turn(mode, candidates, word=None):
     best_word = ""
     best_score = len(candidates)
+    print(f'number of candidates: {len(candidates)}')
     if len(candidates) < 10:
         print('candidates: ', end='')
         print(candidates)
@@ -67,18 +70,37 @@ def turn(mode, candidates, word=None):
     return next_candidates
 
 
-if __name__ == '__main__':
-    with open('dictionary.txt', 'r') as f:
+def read_words(filepath):
+    with open(filepath, 'r') as f:
         lines = f.readlines()
-    lines = [line[:-1] if line[-1] == '\n' else line for line in lines]
+    words = [line[:-1] if line[-1] == '\n' else line for line in lines]
+    return words
+
+
+def generate_answer_word(mode, all_words):
+    if mode == 4:
+        ng_words = read_words('ng_word_4.txt')
+        candidates = list(set(all_words) - set(ng_words))
+        answer_word = random.choice(candidates)
+        return answer_word
+    assert False
+
+
+if __name__ == '__main__':
+    words = read_words('dictionary.txt')
     argc = len(sys.argv)
     mode = 4
     if argc >= 2:
         if sys.argv[1] == '3':
             mode = 3
-    candidates = [line for line in lines if len(line) == mode]
-    first_word = {4: 'DARE'}[mode]
-    print(random.choice(candidates), flush=True)
+    all_words = [word for word in words if len(word) == mode]
+    print(generate_answer_word(mode, all_words), flush=True)
+    candidates = all_words
+    first_word = None
+    try:
+        first_word = {4: 'DARE'}[mode]
+    except:
+        pass
     candidates = turn(mode, candidates, first_word)
     while (len(candidates) > 0):
         candidates = turn(mode, candidates)
