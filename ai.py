@@ -6,7 +6,8 @@ import string
 import sys
 import time
 
-cache = dict()
+import answer_word_generator
+import utility
 
 
 def call(s):
@@ -17,22 +18,10 @@ def call(s):
     return ans_tup
 
 
-def calc_match(called, ans):
-    assert len(called) == len(ans)
-    get_cnt = 0
-    touch_cnt = 0
-    for c1, c2 in zip(called, ans):
-        if c1 == c2:
-            get_cnt += 1
-        elif c1 in ans:
-            touch_cnt += 1
-    return (get_cnt, touch_cnt)
-
-
 def groups_of_word(mode, candidates, word):
     ret = dict()
     for cand in candidates:
-        key = calc_match(word, cand)
+        key = utility.calc_match(word, cand)
         if key not in ret:
             ret[key] = []
         ret[key].append(cand)
@@ -57,10 +46,10 @@ def select_for_best(results):
 
 
 def search_all_words(mode, candidates):
-    global cache
     fs_cand = frozenset(candidates)
+    cache = utility.load_cache(f'cache_{mode}.pickle')
     if fs_cand in cache:
-        print('cache hit !!')
+        print('cache hit!')
         return cache[fs_cand]
     l = 1
     for i in range(mode):
@@ -74,8 +63,10 @@ def search_all_words(mode, candidates):
             tmp, _ = results[i]
             results[i] = (tmp, f'!{word}')
     ret = sorted(results)[:100]
-    if 40 < len(candidates):
+    if 10 < len(candidates):
+        cache = utility.load_cache(f'cache_{mode}.pickle')
         cache[fs_cand] = ret
+        utility.dump_cache(f'cache_{mode}.pickle', cache)
     return ret
 
 
@@ -107,7 +98,6 @@ def turn(mode, candidates, word=None):
             print('Got unexpected answer. Finish? y/n: ', end='', flush=True)
             line = input()
             if line == 'y':
-                dump_cache(mode)
                 sys.exit()
             else:
                 key = call(best_word)
@@ -116,56 +106,19 @@ def turn(mode, candidates, word=None):
     return next_candidates
 
 
-def read_words(filepath):
-    with open(filepath, 'r') as f:
-        lines = f.readlines()
-    words = [line[:-1] if line[-1] == '\n' else line for line in lines]
-    return words
-
-
-def generate_answer_word(mode, all_words):
-    ng_words = read_words(f'ng_word_{mode}.txt')
-    candidates = list(set(all_words) - set(ng_words))
-    answer_word = random.choice(candidates)
-    return answer_word
-
-
-def load_cache(mode):
-    global cache
-    filepath = f'cache_{mode}.pickle'
-    if not os.path.isfile(filepath):
-        cache = dict()
-        return
-    with open(filepath, 'rb') as f:
-        cache = pickle.load(f)
-    return
-
-
-def dump_cache(mode):
-    global cache
-    filepath = f'cache_{mode}.pickle'
-    with open(filepath, 'wb') as f:
-        pickle.dump(cache, f)
-
-
 if __name__ == '__main__':
     argc = len(sys.argv)
     mode = 4
     if argc >= 2:
         if sys.argv[1] == '3':
             mode = 3
-    load_cache(mode)
-    all_words_34 = read_words('dictionary.txt')
+    all_words_34 = utility.read_words('dictionary.txt')
     all_words = [word for word in all_words_34 if len(word) == mode]
-    print(generate_answer_word(mode, all_words), flush=True)
     candidates = all_words
-    first_word = None
-    try:
-        first_word = random.choice(read_words(f'first_word_{mode}.txt'))
-    except:
-        pass
+    first_word = random.choice(utility.read_words(f'first_word_{mode}.txt'))
+    answer_word = answer_word_generator.generate(mode, all_words, first_word)
+    print(answer_word, flush=True)
     candidates = turn(mode, candidates, first_word)
     while (len(candidates) > 0):
         candidates = turn(mode, candidates)
-    dump_cache(mode)
     print('finish')
