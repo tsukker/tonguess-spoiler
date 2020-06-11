@@ -101,7 +101,7 @@ def turn(mode, candidates, word=None):
                 sys.exit()
             else:
                 key = call(best_word)
-    if key == (4, 0):
+    if key == (mode, 0):
         next_candidates = []
     return next_candidates
 
