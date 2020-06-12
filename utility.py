@@ -15,6 +15,8 @@ def calc_match(called, ans):
 
 
 def read_words(filepath):
+    if not os.path.isfile(filepath):
+        return []
     with open(filepath, 'r') as f:
         lines = f.readlines()
     words = [
@@ -22,6 +24,11 @@ def read_words(filepath):
         if len(line) > 0 and line[0] != '#'
     ]
     return words
+
+
+def write_words(filepath, words):
+    with open(filepath, 'w') as f:
+        f.write('\n'.join(words) + '\n')
 
 
 def load_cache(filepath):
